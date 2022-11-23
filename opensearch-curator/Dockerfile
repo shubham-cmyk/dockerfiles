@@ -1,11 +1,8 @@
 FROM python:3-slim-buster
+
 RUN pip install curator-opensearch==0.0.7
 
-RUN useradd --create-home curator
-WORKDIR /home/curator
-USER curator
+WORKDIR /opt/bitnami/python/bin/
+RUN cp /usr/local/bin/curator $(pwd)
 
-RUN /usr/local/bin/curator --version
-RUN /usr/local/bin/curator --help
-
-ENTRYPOINT [ "/usr/local/bin/curator" ]
+ENTRYPOINT [ "/opt/bitnami/python/bin/curator" ]
