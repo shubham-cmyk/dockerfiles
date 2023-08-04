@@ -12,6 +12,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Fetch main branch
+        run: git fetch origin main
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -33,7 +36,7 @@ jobs:
       - name: Find Image Directories
         id: image_dir
         run: |
-          IMAGE_DIR=$(git diff main --stat -- * | cut -d "/" -f 1 | sort -u)
+          IMAGE_DIR=$(git diff origin/main --stat -- * | grep -v "files changed"| cut -d "/" -f 1 | sort -u |tr -d ' ')
           echo "Image directorie: $Image_DIR"
           echo "::set-output name=image_dir::$IMAGE_DIR"
 
