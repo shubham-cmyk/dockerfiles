@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "*" ]
 
 jobs:
   docker:
@@ -10,7 +10,7 @@ jobs:
     steps:
 
       - name: Checkout
-        uses: actions/checkout@v3.5.2
+        uses: actions/checkout@v2
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -26,17 +26,31 @@ jobs:
           username: ${{ github.repository_owner }} # github username or org
           password: ${{ secrets.GITHUB_TOKEN }}    # github actions builtin token. repo has to have pkg access.
       
+      - name: Determine tag name
+        id: tag_name
+        run: echo ::set-output name=TAG_NAME::$(if [ "${GITHUB_REF##*/}" == "main" ]; then echo "latest"; else echo "obmondo-${GITHUB_REF##*/}"; fi)
+
+      - name: Find Image Directories
+        id: image_dir
+        run: |
+          IMAGE_DIR=$(git diff main --stat -- * | cut -d "/" -f 1 | sort -u)
+          echo "Image directorie: $Image_DIR"
+          echo "::set-output name=image_dir::$IMAGE_DIR"
+
       - name: Prepare
         id: prep
         run: |
           echo ::set-output name=created::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
       
       - name: Build and push
+        env:
+          TAG: ${{ steps.tag_name.outputs.TAG_NAME }}
+          IMAGE_DIR: ${{ steps.image_dir.outputs.IMAGE_DIR }}
         id: docker_build
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./logical-backup/Dockerfile
+          file: ./${{ env.IMAGE_DIR }}/Dockerfile
           platforms: linux/amd64
           pull: true # Pull new version of base image, always; avoid bit-rot
           push: true
@@ -51,4 +65,5 @@ jobs:
           cache-from: type=gha # all-automatic Github Actions caching
           cache-to: type=gha,mode=max
           build-args: |
-          tags: ghcr.io/obmondo/logical-backup:latest
+            TAG=${TAG}
+          tags: ghcr.io/obmondo/${{ env.IMAGE_DIR }}:${{ env.TAG }}
