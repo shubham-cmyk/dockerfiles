@@ -4,6 +4,7 @@ on:
   push:
     branches: [ "*" ]
     paths: 'mongodb-backup/**'
+    tag: ["v*.*.*"]
 
 jobs:
   build-and-push:

@@ -8,7 +8,7 @@ RUN wget https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2204-x
 
 RUN pip install --upgrade pip
 RUN pip install azure-cli
-RUN mkdir /backup /dee
+RUN mkdir /backup
 
 ENV S3_PATH=mongodb AWS_DEFAULT_REGION=us-east-1
 

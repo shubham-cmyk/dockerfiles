@@ -1,9 +1,10 @@
 name: Build opensearch-curator
 
 on:
-    push:
-      branches: [ "*" ]
-      paths: 'mongodb-backup/**'
+  push:
+    branches: [ "*" ]
+    paths: 'mongodb-backup/**'
+    tag: [ "*" ]
 
 jobs:
   build-and-push:
