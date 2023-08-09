@@ -24,7 +24,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: obmondo/mongodb-backup
+          images: ghcr.io/obmondo/mongodb-backup
           tags: |
             type=ref,event=branch,enable=${{ !endsWith(github.ref, github.event.repository.default_branch) }}
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
