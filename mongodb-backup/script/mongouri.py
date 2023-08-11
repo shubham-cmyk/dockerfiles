@@ -8,8 +8,8 @@ data = pymongo.uri_parser.parse_uri(uri)
 
 if os.environ.get('MONGO_COMPLETE') is None:
     dbname = '-d %s' % data['database']
-    else:
-        dbname = ''
-        options = '%s %s' % (dbname, uri)
+else:
+    dbname = ''
 
-        print(options)
+options = '%s %s' % (dbname, uri)
+print(options)
