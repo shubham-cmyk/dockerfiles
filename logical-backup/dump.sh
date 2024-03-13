@@ -14,14 +14,28 @@ POSTGRES_OPERATOR=spilo
 LOGICAL_BACKUP_PROVIDER=${LOGICAL_BACKUP_PROVIDER:="s3"}
 LOGICAL_BACKUP_S3_RETENTION_TIME=${LOGICAL_BACKUP_S3_RETENTION_TIME:=""}
 
+PG_DUMP_EXTRA_ARGUMENTS=${PG_DUMP_EXTRA_ARGUMENTS:=""}
+PG_DUMPALL_EXTRA_ARGUMENTS=${PG_DUMPALL_EXTRA_ARGUMENTS:=""}
+PG_DUMP_NJOBS=${PG_DUMP_NJOBS:-4}
+PG_DUMP_COMPRESS=${PG_DUMP_COMPRESS:-6}
+
 function estimate_size {
   "$PG_BIN"/psql -tqAc "${ALL_DB_SIZE_QUERY}"
 }
 
-function dump {
+function dump_db {
   echo "Taking dump of ${PGDATABASE} from ${PGHOST}"
   # settings are taken from the environment
   "$PG_BIN"/pg_dump
+}
+
+function dump_global {
+  "$PG_BIN"/pg_dumpall --globals-only $PG_DUMPALL_EXTRA_ARGUMENTS
+}
+
+function list_databases {
+    # SQL from dumpall
+    psql -c "SELECT datname FROM pg_database d WHERE datallowconn AND datconnlimit != -2 ORDER BY (datname <> 'template1'), datname" --csv | tail -n +2
 }
 
 function compress {
@@ -122,8 +136,27 @@ function upload {
 }
 
 if [ "$LOGICAL_BACKUP_PROVIDER" == "az" ]; then
-  dump | compress > /tmp/azure-backup.sql.gz
-  az_upload /tmp/azure-backup.sql.gz
+PATH_TO_BACKUP="${POSTGRES_OPERATOR}/"$SCOPE$LOGICAL_BACKUP_S3_BUCKET_SCOPE_SUFFIX"/logical_backups/"$(date +%Y-%m-%dT%H%M%S)
+
+    echo Dumping and uploading global items...
+    dump_global | compress | az_upload $PATH_TO_BACKUP/global.sql.gz
+
+    [[ ${PIPESTATUS[0]} != 0 || ${PIPESTATUS[1]} != 0 || ${PIPESTATUS[2]} != 0 ]] && (( ERRORCOUNT += 1 ))
+    set +x
+
+    list_databases > /tmp/database-list
+    while read dbname; do 
+        echo Dumping $dbname...
+        dump_db $dbname
+        echo Uploading directory /tmp/db-$dbname to $PATH_TO_BACKUP/$dbname...
+        az_upload_dir /tmp/db-$dbname $PATH_TO_BACKUP/$dbname
+        echo Cleaning up /tmp/db-$dbname...
+        rm -rf /tmp/db-$dbname
+    done < /tmp/database-list
+
+    rm /tmp/database-list
+
+    exit $ERRORCOUNT
 else
   dump | compress | upload
   [[ ${PIPESTATUS[0]} != 0 || ${PIPESTATUS[1]} != 0 || ${PIPESTATUS[2]} != 0 ]] && (( ERRORCOUNT += 1 ))
