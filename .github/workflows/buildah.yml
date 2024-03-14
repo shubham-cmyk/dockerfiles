@@ -2,7 +2,7 @@ name: Build Buildah
 
 on:
   push:
-    branches: ["*"]
+    branches: ["logical-backup"]
     paths: 'buildah/**'
     tags: ["v*"]
 
@@ -42,4 +42,4 @@ jobs:
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: backup-test
