@@ -1,10 +1,10 @@
-name: Build Buildah
+name: Build mongodb backup
 
 on:
   push:
-    branches: ["*"]
-    paths: 'buildah/**'
-    tags: ["v*"]
+    branches: [ "logical-backup" ]
+    paths: 'logical-backup/**'
+    tags: [ "v*" ]
 
 jobs:
   build-and-push:
@@ -21,9 +21,10 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/obmondo/buildah
+          images: ghcr.io/obmondo/mongodb-backup
           tags: |
-            type=semver,pattern={{version}},value=v1.32.0
+            type=ref,event=branch,enable=${{ !endsWith(github.ref, github.event.repository.default_branch) }}
+            type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
             type=ref,event=tag
           flavor: |
             latest=false
@@ -38,8 +39,8 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          file: "./buildah/Dockerfile"
+          file: "./mongodb-backup/Dockerfile"
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: "test-backup"
