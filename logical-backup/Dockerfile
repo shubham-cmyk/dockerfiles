@@ -40,4 +40,5 @@ COPY ./* ./
 ENV PG_DIR=/usr/lib/postgresql
 
 
+
 ENTRYPOINT ["/dump.sh"]
