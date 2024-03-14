@@ -1,4 +1,4 @@
-name: Build mongodb backup
+name: Build Logical backup
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/obmondo/mongodb-backup
+          images: ghcr.io/obmondo/logical-backup
           tags: |
             type=ref,event=branch,enable=${{ !endsWith(github.ref, github.event.repository.default_branch) }}
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
@@ -39,7 +39,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          file: "./mongodb-backup/Dockerfile"
+          file: "./logical-backup/Dockerfile"
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           push: true
