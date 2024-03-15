@@ -43,4 +43,4 @@ jobs:
           context: .
           labels: ${{ steps.meta.outputs.labels }}
           push: true
-          tags: "test-backup"
+          tags: ${{ steps.meta.outputs.tags }}
