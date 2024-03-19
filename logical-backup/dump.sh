@@ -158,7 +158,7 @@ PATH_TO_BACKUP="${POSTGRES_OPERATOR}/"$SCOPE$LOGICAL_BACKUP_S3_BUCKET_SCOPE_SUFF
 
     exit $ERRORCOUNT
 else
-  dump | compress | upload
+  dump_db | compress | upload
   [[ ${PIPESTATUS[0]} != 0 || ${PIPESTATUS[1]} != 0 || ${PIPESTATUS[2]} != 0 ]] && (( ERRORCOUNT += 1 ))
   set +x
   exit $ERRORCOUNT
