@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -eou pipefail
+set -x
 IFS=$'\n\t'
 
 ## NOTE, these env needs to be passed in the cronjob
