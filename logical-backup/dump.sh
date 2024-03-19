@@ -135,7 +135,7 @@ function upload {
   esac
 }
 
-if [ "$LOGICAL_BACKUP_PROVIDER" == "az" ]; then
+if [ "$LOGICAL_BACKUP_PROVIDER" == "az" && "$PGDATABASE" == "az" ]; then
 PATH_TO_BACKUP="${POSTGRES_OPERATOR}/"$SCOPE$LOGICAL_BACKUP_S3_BUCKET_SCOPE_SUFFIX"/logical_backups/"$(date +%Y-%m-%dT%H%M%S)
 
     echo Dumping and uploading global items...
