@@ -42,7 +42,7 @@ jobs:
         uses: tj-actions/changed-files@v44
         with:
           files: |
-            Dockerfile
+            /Dockerfile
 
       - name: Filter changed Dockerfiles
         env:
