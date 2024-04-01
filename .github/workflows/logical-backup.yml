@@ -2,7 +2,7 @@ name: Build Logical backup
 
 on:
   push:
-    branches: [ "fix-logical-backup" ]
+    branches: [ "-" ]
     tags: [ "v*" ]
 
 jobs:
@@ -31,7 +31,6 @@ jobs:
         run: |
           IFS=',' read -r -a CHANGED_FILES_ARRAY <<< "${{ steps.list-changed-files.outputs.changed-files }}"
           echo "::set-output name=changed-files-array::${CHANGED_FILES_ARRAY[@]}"
-          echo ${CHANGED_FILES_ARRAY[@]}
       - name: Generate container metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
@@ -60,3 +59,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           push: true
           tags: ${{ steps.meta.outputs.tags }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ matrix.image }}

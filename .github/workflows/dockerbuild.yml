@@ -1,0 +1,57 @@
+name: Build Logical backup
+
+on:
+  push:
+    branches: [ "fix-logical-backup" ]
+    tags: [ "v*" ]
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    build-and-push-image:
+        runs-on: ubuntu-latest
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                - dockerfile: ./backup-sealed-secrets-keys/Dockerfile
+                  image: ghcr.io/obmondo/backup-sealed-secrets-keys
+                - dockerfile: ./buildah/Dockerfile
+                  image: ghcr.io/obmondo/buildah
+                - dockerfile: ./logical-backup/Dockerfile
+                  image: ghcr.io/obmondo/logical-backup
+                - dockerfile: ./mongodb-backup/Dockerfile
+                  image: ghcr.io/obmondo/mongodb-backup
+                - dockerfile: ./opensearch-curator/Dockerfile
+                  image: ghcr.io/obmondo/opensearch-curator
+                - dockerfile: ./postgres-cloudnative-citus/Dockerfile
+                  image: ghcr.io/obmondo/postgres-cloudnative-citus
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+            - name: Log in to the Container registry
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.repository_owner }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+            - name: Extract metadata (tags, labels) for Docker
+              id: meta
+              uses: docker/metadata-action@v5.5.1
+              with:
+                images: ${{ matrix.image }}
+            - name: Build & push container image
+              id: docker_build
+              uses: docker/build-push-action@v5.3.0
+              with:
+                context: .
+                file: ${{ matrix.dockerfile }}
+                labels: ${{ steps.meta.outputs.labels }}
+                tags: ${{ steps.meta.outputs.tags }}
+                push: true
