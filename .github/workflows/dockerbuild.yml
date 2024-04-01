@@ -85,4 +85,4 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           tags: ${{ steps.meta.outputs.tags }}
           push: true
-        if: steps.filter-changed-dockerfiles.outputs.changed-dockerfiles != ''
+        if: contains(steps.filter-changed-dockerfiles.outputs.changed-dockerfiles, matrix.dockerfile)
