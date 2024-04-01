@@ -6,52 +6,83 @@ on:
     tags: [ "v*" ]
 
 env:
-    REGISTRY: ghcr.io
-    IMAGE_NAME: ${{ github.repository }}
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-    build-and-push-image:
-        runs-on: ubuntu-latest
-        strategy:
-            fail-fast: false
-            matrix:
-                include:
-                - dockerfile: ./backup-sealed-secrets-keys/Dockerfile
-                  image: ghcr.io/obmondo/backup-sealed-secrets-keys
-                - dockerfile: ./buildah/Dockerfile
-                  image: ghcr.io/obmondo/buildah
-                - dockerfile: ./logical-backup/Dockerfile
-                  image: ghcr.io/obmondo/logical-backup
-                - dockerfile: ./mongodb-backup/Dockerfile
-                  image: ghcr.io/obmondo/mongodb-backup
-                - dockerfile: ./opensearch-curator/Dockerfile
-                  image: ghcr.io/obmondo/opensearch-curator
-                - dockerfile: ./postgres-cloudnative-citus/Dockerfile
-                  image: ghcr.io/obmondo/postgres-cloudnative-citus
-        permissions:
-            contents: read
-            packages: write
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./backup-sealed-secrets-keys/Dockerfile
+            image: ghcr.io/obmondo/backup-sealed-secrets-keys
+          - dockerfile: ./buildah/Dockerfile
+            image: ghcr.io/obmondo/buildah
+          - dockerfile: ./logical-backup/Dockerfile
+            image: ghcr.io/obmondo/logical-backup
+          - dockerfile: ./mongodb-backup/Dockerfile
+            image: ghcr.io/obmondo/mongodb-backup
+          - dockerfile: ./opensearch-curator/Dockerfile
+            image: ghcr.io/obmondo/opensearch-curator
+          - dockerfile: ./postgres-cloudnative-citus/Dockerfile
+            image: ghcr.io/obmondo/postgres-cloudnative-citus
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4.1.1
-            - name: Log in to the Container registry
-              uses: docker/login-action@v3
-              with:
-                registry: ${{ env.REGISTRY }}
-                username: ${{ github.repository_owner }}
-                password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Extract metadata (tags, labels) for Docker
-              id: meta
-              uses: docker/metadata-action@v5.5.1
-              with:
-                images: ${{ matrix.image }}
-            - name: Build & push container image
-              id: docker_build
-              uses: docker/build-push-action@v5.3.0
-              with:
-                context: .
-                file: ${{ matrix.dockerfile }}
-                labels: ${{ steps.meta.outputs.labels }}
-                tags: ${{ steps.meta.outputs.tags }}
-                push: true
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.1.1
+
+      - name: Get all changed docker files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+        with:
+          files: |
+            backup-sealed-secrets-keys/Dockerfile
+            buildah/Dockerfile
+            logical-backup/Dockerfile
+            mongodb-backup/Dockerfile
+            opensearch-curator/Dockerfile
+            postgres-cloudnative-citus/Dockerfile
+
+      - name: Filter changed Dockerfiles
+        id: filter-changed-dockerfiles
+        run: |
+          changed_files="${{ steps.changed-files.outputs.all_changed_files }}"
+          changed_dockerfiles=""
+          for dockerfile in "${changed_files[@]}"; do
+            for file in $dockerfile; do
+              if [[ $file == *"/Dockerfile" ]]; then
+                changed_dockerfiles="$changed_dockerfiles $file"
+              fi
+            done
+          done
+          echo "::set-output name=changed-dockerfiles::$changed_dockerfiles"
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ matrix.image }}
+
+      - name: Build & push container image
+        id: docker_build
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta.outputs.tags }}
+          push: true
+        if: steps.filter-changed-dockerfiles.outputs.changed-dockerfiles != ''
