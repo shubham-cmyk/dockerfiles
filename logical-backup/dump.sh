@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-set -x
+set -eou pipefail 
 IFS=$'\n\t'
 
 ## NOTE, these env needs to be passed in the cronjob
@@ -36,7 +36,7 @@ function dump {
   "$PG_BIN"/pg_dump
 }
 
-function dump_global {
+function dump_all {
   "$PG_BIN"/pg_dumpall --globals-only $PG_DUMPALL_EXTRA_ARGUMENTS
 }
 
