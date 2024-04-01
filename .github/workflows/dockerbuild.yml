@@ -65,13 +65,18 @@ jobs:
         with:
           images: ${{ matrix.image }}
 
-      - name: Build & push container image
-        id: docker_build
-        if: ${{ contains(steps.changed-files.outputs.all_changed_files, matrix.dockerfile) }}
-        uses: docker/build-push-action@v5.3.0
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          labels: ${{ steps.meta.outputs.labels }}
-          tags: ${{ steps.meta.outputs.tags }}
-          push: true
+      - name: test
+        run: |
+            echo ${{ steps.changed-files.outputs.all_changed_files}}
+            echo ${{matrix.dockerfile}}
+
+    #   - name: Build & push container image
+    #     id: docker_build
+    #     if: ${{ contains(steps.changed-files.outputs.all_changed_files, matrix.dockerfile) }}
+    #     uses: docker/build-push-action@v5.3.0
+    #     with:
+    #       context: .
+    #       file: ${{ matrix.dockerfile }}
+    #       labels: ${{ steps.meta.outputs.labels }}
+    #       tags: ${{ steps.meta.outputs.tags }}
+    #       push: true
