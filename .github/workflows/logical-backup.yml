@@ -31,7 +31,7 @@ jobs:
         run: |
           IFS=',' read -r -a CHANGED_FILES_ARRAY <<< "${{ steps.list-changed-files.outputs.changed-files }}"
           echo "::set-output name=changed-files-array::${CHANGED_FILES_ARRAY[@]}"
-          
+          echo ${CHANGED_FILES_ARRAY[@]}
       - name: Generate container metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
