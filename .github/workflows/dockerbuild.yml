@@ -45,12 +45,18 @@ jobs:
             **/Dockerfile
 
       - name: Filter changed Dockerfiles
+        id: filter-changed-dockerfiles
         env:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          for file in ${ALL_CHANGED_FILES}; do
-            echo "$file was changed"
-          done
+            should_build=false
+            for dockerfile in ${{ matrix.dockerfile }}; do
+              if [[ "${ALL_CHANGED_FILES}" == *"${dockerfile}"* ]]; then
+                should_build=true
+                break
+              fi
+            done
+            echo "::set-output name=should_build::$should_build"
 
       - name: Log in to the Container registry
         uses: docker/login-action@v3
@@ -64,10 +70,10 @@ jobs:
         uses: docker/metadata-action@v5.5.1
         with:
           images: ${{ matrix.image }}
-
+            
       - name: Build & push container image
         id: docker_build
-        if: ${{ contains(startsWith(steps.changed-files.outputs.all_changed_files, './'), matrix.dockerfile) }}
+        if: steps.filter-changed-dockerfiles.outputs.should_build == 'true'
         uses: docker/build-push-action@v5.3.0
         with:
           context: .
