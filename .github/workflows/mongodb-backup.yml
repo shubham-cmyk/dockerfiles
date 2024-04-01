@@ -2,7 +2,7 @@ name: Build mongodb backup
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "-" ]
     paths: 'mongodb-backup/**'
     tags: [ "v*" ]
 

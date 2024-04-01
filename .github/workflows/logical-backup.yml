@@ -25,15 +25,18 @@ jobs:
         env:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          for file in ${ALL_CHANGED_FILES}; do
-            echo "$file was changed"
-          done
+          echo "::set-output name=changed-files::$(echo "$ALL_CHANGED_FILES" | tr '\n' ',')"
+      - name: Convert output to array
+        id: convert-to-array
+        run: |
+          IFS=',' read -r -a CHANGED_FILES_ARRAY <<< "${{ steps.list-changed-files.outputs.changed-files }}"
+          echo "::set-output name=changed-files-array::${CHANGED_FILES_ARRAY[@]}"
 
       - name: Generate container metadata
         id: meta
         uses: docker/metadata-action@v5.5.1
         with:
-          images: ghcr.io/obmondo/logical-backup
+          images: ghcr.io/obmondo/${{ steps.changed-files.outputs.all_changed_files}}
           tags: |
             type=ref,event=branch,enable=${{ !endsWith(github.ref, github.event.repository.default_branch) }}
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
