@@ -65,14 +65,9 @@ jobs:
         with:
           images: ${{ matrix.image }}
 
-      - name: test
-        run: |
-            echo ${{ steps.changed-files.outputs.all_changed_files}}
-            echo ${{matrix.dockerfile}}
-
       - name: Build & push container image
         id: docker_build
-        if: ${{ contains(steps.changed-files.outputs.all_changed_files, './' + matrix.dockerfile) }}
+        if: ${{ contains(startsWith(steps.changed-files.outputs.all_changed_files, './'), matrix.dockerfile) }}
         uses: docker/build-push-action@v5.3.0
         with:
           context: .
