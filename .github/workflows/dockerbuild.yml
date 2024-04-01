@@ -52,7 +52,7 @@ jobs:
             set -x
             should_build=false
             for dockerfile in ${{ matrix.dockerfile }}; do
-              if [[ "${ALL_CHANGED_FILES}" == "${dockerfile}"]]; then
+              if [[ "${ALL_CHANGED_FILES}" == *"${dockerfile}"* ]]; then
                 should_build=true
                 break
               fi
