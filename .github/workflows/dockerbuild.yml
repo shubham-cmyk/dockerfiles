@@ -49,6 +49,7 @@ jobs:
         env:
           ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
+            set -x
             should_build=false
             for dockerfile in ${{ matrix.dockerfile }}; do
               if [[ "${ALL_CHANGED_FILES}" == *"${dockerfile}"* ]]; then
